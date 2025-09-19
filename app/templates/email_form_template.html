@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Signature Request</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4; /* neutral outside */
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.25);
+      background-color:  #f4f4f4; /* container background = user theme */
+    }
+    .inner {
+      padding: 40px;
+      border-radius: 10px;
+      background-color: {{ theme }}; /* inner card for readability */
+      color: #000000;
+    }
+    .btn {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: #0000cc !important;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: 2px solid #0000cc;
+  }
+  .btn img {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+  /* Hover effect */
+  .btn:hover {
+    background-color: {{ theme }} !important;
+    color: #ffffff !important;
+  }
+  .btn:hover img {
+    filter: brightness(0) invert(1); /* makes icon white on hover */
+  }
+
+
+    .footer {
+      font-size: 13px;
+      text-align: left;
+      border-top: 1px solid #ccc;
+      padding-top: 20px;
+      color: #000000;
+    }
+    .footer a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    .validity {
+      margin-top: 20px;
+      color: #cc0000;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f4f4">
+    <tr>
+      <td align="center">
+        <table width="700" cellpadding="0" cellspacing="0" border="0" class="container">
+          <tr>
+            <td class="inner">
+                <!-- Logo + Org (compact) -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                   style="text-align:center; padding:15px; background:#ffffff;
+                          border-radius:12px;">
+              <tr>
+                <td align="center">
+                  <img src="cid:company_logo" alt="Organization Logo"
+                       style="max-height:45px; display:block; margin:0 auto;" />
+                  <p style="margin:8px 0 0 0; font-weight:bold; color:#000000; font-size:13px;">
+                    {{ org }}
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+
+
+              <!-- Heading -->
+              <p style="text-align:center; font-weight:bold; font-size:16px; margin:30px 0 20px 0; color:#000000;">
+                DoculanForms – Digital form
+              </p>
+
+              <!-- Body -->
+              <div style="color:#000000; font-size:15px; line-height:1.5; text-align:left;">
+                {{ html_body_with_br | safe }}
+              </div>
+
+              <!-- Support -->
+              <p style="margin-top:30px; color:#000000;">
+                If you have any questions or need assistance, feel free to contact our support team.
+              </p>
+
+              <!-- Validity -->
+              <p class="validity">
+                Note: This link is valid until {{ formatted_validity }}
+              </p>
+
+              <!-- Footer -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;">
+                <tr>
+                  <td class="footer">
+                    <p><strong>Do Not Share This Email</strong><br>
+                      This email contains a secure link. Please do not share this email, link, or access code with others.
+                    </p>
+
+                    <p><strong>Need Help?</strong><br>
+                      If you have any questions, technical issues, or need assistance with our services, please don't hesitate to reach out.<br>
+                      You can contact our support team at
+                      <a href="mailto:support@doculan.ai">support@doculan.ai</a>
+                      or our general inquiries team at
+                      <a href="mailto:info@virtualansoftware.com">info@virtualansoftware.com</a>.<br>
+                      We’re here to help and will respond as soon as possible.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

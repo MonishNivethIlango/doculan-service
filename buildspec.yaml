@@ -1,0 +1,45 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.x
+    commands:
+      # - apt-get update
+      # - apt-get install -y docker.io
+      - pip install awscli
+      - pip install --upgrade pip
+
+  pre_build:
+    commands:
+      - echo Logging in to Docker Hub...
+      - docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+      - echo Setting image tags...
+      # - IMAGE_TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)"
+      # - IMAGE_REPO_NAME="$DOCKERHUB_USERNAME/$CODEBUILD_PROJECT_NAME"
+      # - FULL_IMAGE_NAME="$IMAGE_REPO_NAME:$IMAGE_TAG"
+      # - echo "Full image name: $FULL_IMAGE_NAME"
+      - echo Installing dependencies...
+      - cd doculan-service
+      - python -m venv .venv
+      - source .venv/bin/activate
+      - echo Upgrading pip...
+      - pip install --upgrade pip setuptools wheel
+      - echo Installing requirements...
+      - pip install -r requirements.txt
+
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t "$IMAGE_REPO_NAME:$IMAGE_TAG" .
+
+  post_build:
+    commands:
+      - echo Pushing Docker image to Docker Hub...
+      - docker push "$IMAGE_REPO_NAME:$IMAGE_TAG"
+      - echo Writing image definitions file...
+      - printf '{"ImageURI":"%s"}' "$IMAGE_REPO_NAME:$IMAGE_TAG" > image_definitions.json
+
+artifacts:
+  files:
+    - image_definitions.json
