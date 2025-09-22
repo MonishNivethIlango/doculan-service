@@ -9,6 +9,7 @@ phases:
       - pip install --upgrade pip
   pre_build:
     commands:
+      - set -e
       - echo Logging in to Docker Hub...
       - echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
       - echo Setting image tags...
@@ -22,15 +23,25 @@ phases:
         elif [ -f .venv/Scripts/activate ]; then
           source .venv/Scripts/activate
         fi
+        python --version
+        pip --version
         pip install --upgrade pip setuptools wheel
         pip install pytest pytest-cov pytest-html
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        mkdir -p test-results
+      - mkdir -p test-results
+      - |
+        if [ -f .venv/bin/activate ]; then
+          source .venv/bin/activate
+        elif [ -f .venv/Scripts/activate ]; then
+          source .venv/Scripts/activate
+        fi
         pytest --junitxml=test-results/pytest-report.xml \
                --cov=app --cov-report=xml:test-results/coverage.xml \
                --cov-report=html:test-results/coverage-html \
                --cov-fail-under=75 \
-               --html=test-results/pytest-report.html --self-contained-html --tb=short || exit 1
+               --html=test-results/pytest-report.html --self-contained-html --tb=short
+
+# ...rest of your buildspec unchanged...
 
   build:
     commands:
