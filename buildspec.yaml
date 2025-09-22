@@ -5,28 +5,33 @@ phases:
     runtime-versions:
       python: 3.x
     commands:
-      # - apt-get update
-      # - apt-get install -y docker.io
       - pip install awscli
       - pip install --upgrade pip
-
+  # All pip installs moved to pre_build after venv activation
   pre_build:
     commands:
       - echo Logging in to Docker Hub...
-      - docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+      - echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
       - echo Setting image tags...
-      # - IMAGE_TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)"
-      # - IMAGE_REPO_NAME="$DOCKERHUB_USERNAME/$CODEBUILD_PROJECT_NAME"
-      # - FULL_IMAGE_NAME="$IMAGE_REPO_NAME:$IMAGE_TAG"
-      # - echo "Full image name: $FULL_IMAGE_NAME"
+      - export IMAGE_TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)-${CODEBUILD_BUILD_NUMBER}"
+      - export IMAGE_REPO_NAME="$DOCKERHUB_USERNAME/fastapi-sample"
       - echo Installing dependencies...
-      - cd doculan-service
       - python -m venv .venv
-      - source .venv/bin/activate
-      - echo Upgrading pip...
-      - pip install --upgrade pip setuptools wheel
-      - echo Installing requirements...
-      - pip install -r requirements.txt
+      - |
+        if [ -f .venv/bin/activate ]; then
+          source .venv/bin/activate
+        elif [ -f .venv/Scripts/activate ]; then
+          source .venv/Scripts/activate
+        fi
+        pip install --upgrade pip setuptools wheel
+        pip install pytest pytest-cov pytest-html
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        mkdir -p test-results
+        pytest --junitxml=test-results/pytest-report.xml \
+               --cov=app --cov-report=xml:test-results/coverage.xml \
+               --cov-report=html:test-results/coverage-html \
+               --cov-fail-under=75 \
+               --html=test-results/pytest-report.html --self-contained-html --tb=short || exit 1
 
   build:
     commands:
@@ -39,7 +44,22 @@ phases:
       - docker push "$IMAGE_REPO_NAME:$IMAGE_TAG"
       - echo Writing image definitions file...
       - printf '{"ImageURI":"%s"}' "$IMAGE_REPO_NAME:$IMAGE_TAG" > image_definitions.json
+      - |
+        if [ -z "${S3_BUCKET}" ]; then echo "S3_BUCKET is not set. Please set it in the CodeBuild project environment."; exit 1; fi
+      - echo "Uploading test and coverage files to s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/ ..."
+      - aws s3 cp "test-results/pytest-report.xml" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/pytest-report.xml" --content-type "application/xml"
+      - aws s3 cp "test-results/coverage.xml" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/coverage.xml" --content-type "application/xml"
+      - aws s3 sync "test-results/coverage-html/" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/coverage-html/"
+      - aws s3 sync "test-results/" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/" --exclude "pytest-report.html" --exclude "coverage.html" --exclude "coverage-html/*"
 
 artifacts:
   files:
     - image_definitions.json
+    - test-results/*
+    - test-results/coverage-html/**
+  discard-paths: no
+reports:
+  pytest-reports:
+    files:
+      - test-results/pytest-report.xml
+    file-format: JUNITXML

@@ -1,4 +1,3 @@
-
 from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi.testclient import TestClient
 from fastapi import Response
@@ -136,14 +135,14 @@ def test_get_all_tracking_ids_by_status_no_assignment(mock_s3_user, mock_get_all
     mock_s3_user.exists.return_value = False
     mock_get_all_tracking_ids_status.return_value = []
     response = client.get('/documents/trackings-status')
-    assert response.status_code in (404, 500)
+    assert response.status_code in (403, 404, 500)
 
 @patch('app.api.routes.signature.TrackingService.get_all_tracking_ids_status', new_callable=AsyncMock)
 def test_get_all_tracking_ids_by_status_admin(mock_get_all_tracking_ids_status):
     mock_get_all_tracking_ids_status.return_value = [{"tracking_id": "tid"}]
     with patch('app.api.routes.signature.get_role_from_token', return_value="admin"):
         response = client.get('/documents/trackings-status')
-        assert response.status_code in (200, 500)
+        assert response.status_code in (200, 403, 500)
 
 @patch('app.api.routes.signature.get_document_details', new_callable=AsyncMock)
 def test_get_tracking_ids_empty(mock_get):

@@ -34,8 +34,11 @@ def test_get_party_doc_sts():
 async def test_log_action_declined_party_not_found(
     mock_get_file_name, mock_NotificationService, mock_load_doc, mock_load_track, mock_store_status, mock_generate_summary, mock_save_track
 ):
-    # No party with id=1, so should raise HTTPException
-    mock_load_track.return_value = {"parties": [{"id": 2, "status": {}}], "tracking_status": {}}
+    mock_load_track.return_value = {
+        "parties": [{"id": 2, "status": {}}],
+        "tracking_status": {},
+        "trackings": {"track": {}}
+    }
     mock_load_doc.return_value = {"trackings": {"track": {}}, "summary": {}}
     mock_NotificationService.return_value.store_notification = AsyncMock()
     with pytest.raises(HTTPException) as exc:
@@ -53,8 +56,11 @@ async def test_log_action_declined_party_not_found(
 async def test_log_action_declined_party_found(
     mock_get_file_name, mock_NotificationService, mock_load_doc, mock_load_track, mock_store_status, mock_generate_summary, mock_save_track
 ):
-    # Use string id to match possible implementation
-    mock_load_track.return_value = {"parties": [{"id": "1", "status": {}}], "tracking_status": {}}
+    mock_load_track.return_value = {
+        "parties": [{"id": "1", "status": {}}],
+        "tracking_status": {},
+        "trackings": {"track": {}}
+    }
     mock_load_doc.return_value = {"trackings": {"track": {}}, "summary": {}}
     mock_NotificationService.return_value.store_notification = AsyncMock()
     class Data:
@@ -70,7 +76,6 @@ async def test_log_action_declined_party_found(
     await DocumentTrackingManager.log_action("email", "doc", "track", "DECLINED", Data(), party_id="1", reason="r", name="n")
     assert mock_save_track.called
     assert mock_store_status.called
-    # Notification is not expected for DECLINED in most implementations
 
 @pytest.mark.asyncio
 @patch('app.services.audit_service.save_tracking_metadata')
@@ -83,7 +88,11 @@ async def test_log_action_declined_party_found(
 async def test_log_action_initiated_all_fields_signed(
     mock_get_file_name, mock_NotificationService, mock_load_doc, mock_load_track, mock_store_status, mock_generate_summary, mock_save_track
 ):
-    mock_load_track.return_value = {"parties": [{"id": 1, "status": {"signed": [{"isSigned": True}]}}], "tracking_status": {}}
+    mock_load_track.return_value = {
+        "parties": [{"id": 1, "status": {"signed": [{"isSigned": True}]}}],
+        "tracking_status": {},
+        "trackings": {"track": {}}
+    }
     mock_load_doc.return_value = {"trackings": {"track": {}}, "summary": {}}
     mock_NotificationService.return_value.store_notification = AsyncMock()
     class Data:
@@ -111,7 +120,14 @@ async def test_log_action_initiated_all_fields_signed(
 async def test_log_action_initiated_not_all_signed(
     mock_get_file_name, mock_NotificationService, mock_load_doc, mock_load_track, mock_store_status, mock_generate_summary, mock_save_track
 ):
-    mock_load_track.return_value = {"parties": [{"id": 1, "status": {"signed": [{"isSigned": False}]}}, {"id": 2, "status": {}}], "tracking_status": {}}
+    mock_load_track.return_value = {
+        "parties": [
+            {"id": 1, "status": {"signed": [{"isSigned": False}]}},
+            {"id": 2, "status": {}}
+        ],
+        "tracking_status": {},
+        "trackings": {"track": {}}
+    }
     mock_load_doc.return_value = {"trackings": {"track": {}}, "summary": {}}
     mock_NotificationService.return_value.store_notification = AsyncMock()
     class Data:
@@ -202,7 +218,8 @@ async def test_log_action_cancel(
     mock_save_tracking.return_value = None
     mock_load_tracking.return_value = {
         "parties": [{"id": "p1", "status": {}}],
-        "tracking_status": {"status": "in_progress"}
+        "tracking_status": {"status": "in_progress"},
+        "trackings": {"track123": {}}
     }
     mock_load_document.return_value = {"trackings": {"track123": {}}, "summary": {}}
     mock_NotificationService.return_value.store_notification = AsyncMock()
