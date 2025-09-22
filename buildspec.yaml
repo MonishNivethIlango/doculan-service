@@ -7,6 +7,7 @@ phases:
     commands:
       - pip install awscli
       - pip install --upgrade pip
+
   pre_build:
     commands:
       - set -e
@@ -18,23 +19,23 @@ phases:
       - echo Installing dependencies...
       - python -m venv .venv
       - |
-        if [ -f .venv/bin/activate ]; then
-          source .venv/bin/activate
-        elif [ -f .venv/Scripts/activate ]; then
-          source .venv/Scripts/activate
-        fi
-        python --version
-        pip --version
-        pip install --upgrade pip setuptools wheel
-        pip install pytest pytest-cov pytest-html
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f .venv/bin/activate ]; then
+            source .venv/bin/activate
+          elif [ -f .venv/Scripts/activate ]; then
+            source .venv/Scripts/activate
+          fi
+          python --version
+          pip --version
+          pip install --upgrade pip setuptools wheel
+          pip install pytest pytest-cov pytest-html
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - mkdir -p test-results
       - |
-        if [ -f .venv/bin/activate ]; then
-          source .venv/bin/activate
-        elif [ -f .venv/Scripts/activate ]; then
-          source .venv/Scripts/activate
-        fi
+          if [ -f .venv/bin/activate ]; then
+            source .venv/bin/activate
+          elif [ -f .venv/Scripts/activate ]; then
+            source .venv/Scripts/activate
+          fi
       - pytest --junitxml=test-results/pytest-report.xml \
                --cov=app --cov-report=xml:test-results/coverage.xml \
                --cov-report=html:test-results/coverage-html \
@@ -54,15 +55,15 @@ phases:
       - echo Writing image definitions file...
       - printf '{"ImageURI":"%s"}' "$IMAGE_REPO_NAME:$IMAGE_TAG" > image_definitions.json
       - |
-        if [ -z "${S3_BUCKET}" ]; then echo "S3_BUCKET is not set. Please set it in the CodeBuild project environment."; exit 1; fi
+          if [ -z "${S3_BUCKET}" ]; then echo "S3_BUCKET is not set. Please set it in the CodeBuild project environment."; exit 1; fi
       - echo "Uploading test and coverage files to s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/ ..."
       - aws s3 cp "test-results/pytest-report.xml" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/pytest-report.xml" --content-type "application/xml"
       - aws s3 cp "test-results/coverage.xml" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/coverage.xml" --content-type "application/xml"
       - aws s3 cp "test-results/pytest-report.html" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/pytest-report.html" --content-type "text/html"
       - |
-        if [ -d "test-results/coverage-html/" ]; then
-          aws s3 sync "test-results/coverage-html/" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/coverage-html/"
-        fi
+          if [ -d "test-results/coverage-html/" ]; then
+            aws s3 sync "test-results/coverage-html/" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/coverage-html/"
+          fi
       - aws s3 sync "test-results/" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/" --exclude "pytest-report.html" --exclude "coverage.html" --exclude "coverage-html/*"
 
 artifacts:
@@ -71,6 +72,7 @@ artifacts:
     - test-results/*
     - test-results/coverage-html/**
   discard-paths: no
+
 reports:
   pytest-reports:
     files:
