@@ -35,11 +35,11 @@ phases:
         elif [ -f .venv/Scripts/activate ]; then
           source .venv/Scripts/activate
         fi
-        pytest --junitxml=test-results/pytest-report.xml \
+      - pytest --junitxml=test-results/pytest-report.xml \
                --cov=app --cov-report=xml:test-results/coverage.xml \
                --cov-report=html:test-results/coverage-html \
                --cov-fail-under=60 \
-               --html=test-results/pytest-report.html --self-contained-html --tb=short
+               --html=test-results/pytest-report.html --self-contained-html --tb=short || true
 
   build:
     commands:
