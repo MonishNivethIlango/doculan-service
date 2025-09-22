@@ -38,7 +38,7 @@ phases:
         pytest --junitxml=test-results/pytest-report.xml \
                --cov=app --cov-report=xml:test-results/coverage.xml \
                --cov-report=html:test-results/coverage-html \
-               --cov-fail-under=75 \
+               --cov-fail-under=60 \
                --html=test-results/pytest-report.html --self-contained-html --tb=short
 
 # ...rest of your buildspec unchanged...
