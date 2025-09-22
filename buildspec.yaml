@@ -41,28 +41,26 @@ phases:
                --cov-fail-under=60 \
                --html=test-results/pytest-report.html --self-contained-html --tb=short
 
-# ...rest of your buildspec unchanged...
-
   build:
     commands:
       - echo Building the Docker image...
       - docker build -t "$IMAGE_REPO_NAME:$IMAGE_TAG" .
       - echo Build successful
 
- post_build:
-  commands:
-    - echo Pushing Docker image to Docker Hub...
-    - docker push "$IMAGE_REPO_NAME:$IMAGE_TAG"
-    - echo Writing image definitions file...
-    - printf '{"ImageURI":"%s"}' "$IMAGE_REPO_NAME:$IMAGE_TAG" > image_definitions.json
-    - |
-      if [ -z "${S3_BUCKET}" ]; then echo "S3_BUCKET is not set. Please set it in the CodeBuild project environment."; exit 1; fi
-    - echo "Uploading test and coverage files to s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/ ..."
-    - aws s3 cp "test-results/pytest-report.xml" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/pytest-report.xml" --content-type "application/xml"
-    - aws s3 cp "test-results/coverage.xml" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/coverage.xml" --content-type "application/xml"
-    - aws s3 cp "test-results/pytest-report.html" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/pytest-report.html" --content-type "text/html"
-    - aws s3 sync "test-results/coverage-html/" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/coverage-html/"
-    - aws s3 sync "test-results/" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/" --exclude "pytest-report.html" --exclude "coverage.html" --exclude "coverage-html/*"
+  post_build:
+    commands:
+      - echo Pushing Docker image to Docker Hub...
+      - docker push "$IMAGE_REPO_NAME:$IMAGE_TAG"
+      - echo Writing image definitions file...
+      - printf '{"ImageURI":"%s"}' "$IMAGE_REPO_NAME:$IMAGE_TAG" > image_definitions.json
+      - |
+        if [ -z "${S3_BUCKET}" ]; then echo "S3_BUCKET is not set. Please set it in the CodeBuild project environment."; exit 1; fi
+      - echo "Uploading test and coverage files to s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/ ..."
+      - aws s3 cp "test-results/pytest-report.xml" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/pytest-report.xml" --content-type "application/xml"
+      - aws s3 cp "test-results/coverage.xml" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/coverage.xml" --content-type "application/xml"
+      - aws s3 cp "test-results/pytest-report.html" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/pytest-report.html" --content-type "text/html"
+      - aws s3 sync "test-results/coverage-html/" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/coverage-html/"
+      - aws s3 sync "test-results/" "s3://${S3_BUCKET}/${CODEBUILD_SOURCE_VERSION}/${CODEBUILD_BUILD_ID}/pytest/" --exclude "pytest-report.html" --exclude "coverage.html" --exclude "coverage-html/*"
 
 artifacts:
   files:
